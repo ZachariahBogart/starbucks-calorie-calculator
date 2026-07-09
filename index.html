@@ -2800,12 +2800,77 @@ const DB = {
     }
 
     function changeSize(size) {
-      appState.size = size;
+      const oldSize = appState.size;
       const drink = drinks.find(d => d.id === appState.drinkId);
-      appState.mods = getModsForSize(drink, size);
+      
+      const oldDefMods = getModsForSize(drink, oldSize);
+      const newDefMods = getModsForSize(drink, size);
+      
+      const curMods = appState.mods;
+      const nextMods = {
+        milk: curMods.milk !== oldDefMods.milk ? curMods.milk : newDefMods.milk,
+        milkVol: curMods.milkVol !== oldDefMods.milkVol ? curMods.milkVol : newDefMods.milkVol,
+        shots: Math.max(0, newDefMods.shots + (curMods.shots - oldDefMods.shots)),
+        syrups: {},
+        sauces: {},
+        powders: {},
+        addons: {}
+      };
+
+      // Syrups
+      const syrupKeys = new Set([...Object.keys(DB.syrups)]);
+      syrupKeys.forEach(id => {
+        const curVal = curMods.syrups[id] || 0;
+        const oldDefVal = oldDefMods.syrups[id] || 0;
+        const newDefVal = newDefMods.syrups[id] || 0;
+        const delta = curVal - oldDefVal;
+        if (delta !== 0 || curVal > 0) {
+          nextMods.syrups[id] = Math.max(0, newDefVal + delta);
+        }
+      });
+
+      // Sauces
+      const sauceKeys = new Set([...Object.keys(DB.sauces)]);
+      sauceKeys.forEach(id => {
+        const curVal = curMods.sauces[id] || 0;
+        const oldDefVal = oldDefMods.sauces[id] || 0;
+        const newDefVal = newDefMods.sauces[id] || 0;
+        const delta = curVal - oldDefVal;
+        if (delta !== 0 || curVal > 0) {
+          nextMods.sauces[id] = Math.max(0, newDefVal + delta);
+        }
+      });
+
+      // Powders
+      const powderKeys = new Set([...Object.keys(DB.powders)]);
+      powderKeys.forEach(id => {
+        const curVal = curMods.powders[id] || 0;
+        const oldDefVal = oldDefMods.powders[id] || 0;
+        const newDefVal = newDefMods.powders[id] || 0;
+        const delta = curVal - oldDefVal;
+        if (delta !== 0 || curVal > 0) {
+          nextMods.powders[id] = Math.max(0, newDefVal + delta);
+        }
+      });
+
+      // Addons
+      const addonKeys = new Set([...Object.keys(DB.addons)]);
+      addonKeys.forEach(id => {
+        const curVal = curMods.addons[id] || 0;
+        const oldDefVal = oldDefMods.addons[id] || 0;
+        const newDefVal = newDefMods.addons[id] || 0;
+        if (curVal !== oldDefVal) {
+          nextMods.addons[id] = curVal;
+        } else {
+          nextMods.addons[id] = newDefVal;
+        }
+      });
+
+      appState.size = size;
+      appState.mods = nextMods;
       
       renderSizes();
-      renderCustomizations(); // to reset inputs
+      renderCustomizations();
       updateBreakdown();
     }
 
