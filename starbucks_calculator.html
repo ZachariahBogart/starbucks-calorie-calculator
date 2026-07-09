@@ -1,0 +1,3147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starbucks Calorie Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* DESIGN_VARIANCE: 6 | MOTION_INTENSITY: 6 | VISUAL_DENSITY: 4 */
+    * { box-sizing: border-box; }
+    
+    :root {
+      --sb-green: #00704a;
+      --sb-dark-green: #1e3932;
+      --sb-light-green: #e8f5e9;
+      --bg-light: #f7f9fa;
+      --card-bg: #ffffff;
+      --text-primary: #1e3932;
+      --text-secondary: #5f746f;
+      --border-color: rgba(30, 57, 50, 0.08);
+    }
+
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    /* Header Section: Modern Glassmorphic panel with deep shadow */
+    .header-section {
+      background: linear-gradient(135deg, var(--sb-dark-green) 0%, #0c201b 100%);
+      color: white;
+      padding: 24px 20px;
+      padding-top: max(24px, env(safe-area-inset-top));
+      box-shadow: 0 10px 30px -5px rgba(12, 32, 27, 0.3);
+      z-index: 10;
+      flex-shrink: 0;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Decorative light reflection on header */
+    .header-section::after {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    
+    .header-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      opacity: 0.8;
+    }
+    
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .total-label {
+      font-size: 16px;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+    
+    .total-value-container {
+      font-size: 42px;
+      font-weight: 800;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      letter-spacing: -1px;
+    }
+    
+    .total-value-container span.unit {
+      font-size: 18px;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    
+    /* Glassmorphic scrollable breakdown container */
+    .breakdown-container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-top: 18px;
+      max-height: 20vh;
+      overflow-y: auto;
+      font-size: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    
+    .breakdown-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .breakdown-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+    
+    /* Scrollable Settings Panel */
+    .scrollable-content {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      padding-bottom: 80px;
+      scroll-behavior: smooth;
+    }
+    
+    /* Cards - Premium visual style */
+    .md-card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 24px -8px rgba(30, 57, 50, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .md-card h3 {
+      margin: 0 0 20px 0;
+      font-size: 18px;
+      color: var(--sb-dark-green);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    
+    /* Labels & Custom Select Fields */
+    .md-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .md-select {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1.5px solid var(--border-color);
+      font-size: 16px;
+      font-weight: 600;
+      background-color: #fafbfc;
+      color: var(--text-primary);
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%231e3932" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .md-select:focus {
+      border-color: var(--sb-green);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 4px rgba(0, 112, 74, 0.12);
+    }
+    
+    /* Search Input Field */
+    #drink-search {
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%235f746f" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: 16px center;
+      padding-left: 48px;
+      background-color: #f0f2f3;
+      border-color: transparent;
+    }
+    
+    #drink-search:focus {
+      background-color: #ffffff;
+      border-color: var(--sb-green);
+    }
+    
+    .mb-16 { margin-bottom: 16px; }
+    
+    /* Premium Cup Size Chips */
+    .chip-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .md-chip {
+      padding: 12px 20px;
+      border-radius: 16px;
+      background: #f0f2f3;
+      color: var(--text-secondary);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .md-chip.active {
+      background: var(--sb-light-green);
+      color: var(--sb-green);
+      border-color: var(--sb-green);
+      transform: scale(1.03);
+    }
+    
+    /* Counters (Row & Action Buttons) */
+    .counter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(30, 57, 50, 0.05);
+    }
+    .counter-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .counter-row:first-of-type { padding-top: 0; }
+    
+    .item-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .cal-hint {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+    
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f0f2f3;
+      padding: 4px;
+      border-radius: 20px;
+    }
+    
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #ffffff;
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      outline: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .icon-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    .icon-btn:active {
+      background: #f0f2f3;
+      transform: scale(0.95);
+    }
+    
+    .count-val {
+      min-width: 24px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+    
+    /* Custom Sliding Toggle Switch */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(30, 57, 50, 0.05);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .toggle-row:first-of-type { padding-top: 0; }
+    
+    .toggle-row input { display: none; }
+    
+    .custom-toggle {
+      width: 52px;
+      height: 30px;
+      background: #dcded0;
+      border-radius: 15px;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+    }
+    
+    .custom-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+    
+    .toggle-row input:checked + .custom-toggle {
+      background: var(--sb-green);
+    }
+    
+    .toggle-row input:checked + .custom-toggle::after {
+      transform: translateX(22px);
+    }
+    
+    /* Ripple Layer */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: ripple 600ms cubic-bezier(0.1, 0.8, 0.3, 1);
+      background-color: rgba(0, 112, 74, 0.15);
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
+    /* Live Value Bump Animation */
+    @keyframes bump {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .bump {
+      animation: bump 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: inline-block;
+    }
+    
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      line-height: 1.45;
+    }
+    .breakdown-row:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header with Breakdown Panel -->
+  <div class="header-section">
+    <h1 class="header-title">Starbucks Calculator</h1>
+    <div class="total-row">
+      <span class="total-label">Live Total</span>
+      <div class="total-value-container">
+        <span id="total-calories">0</span>
+        <span class="unit">cal</span>
+      </div>
+    </div>
+    <div class="breakdown-container" id="breakdown-list">
+      <!-- Breakdown populated by JS -->
+    </div>
+  </div>
+
+  <!-- Main Scrollable Settings -->
+  <div class="scrollable-content">
+    
+    <!-- Drink Selection (Search) -->
+    
+    <!-- Drink Selection -->
+    <div class="md-card">
+      <label class="md-label">Select Base Drink</label>
+      <input type="text" id="drink-search" placeholder="Search drinks (e.g. Mocha)..." class="md-select mb-16" oninput="filterDrinks()">
+      <select id="drink-select" class="md-select"></select>
+    </div>
+
+
+    <!-- Size -->
+    <div class="md-card">
+      <h3>Cup Size</h3>
+      <div class="chip-group" id="size-chips"></div>
+    </div>
+
+    <!-- Milk & Espresso -->
+    <div class="md-card">
+      <h3>Milk & Espresso</h3>
+      <div class="mb-16">
+        <label class="md-label">Milk Type</label>
+        <select id="milk-select" class="md-select"></select>
+      </div>
+      
+      <div class="counter-row">
+        <div>
+          <span class="item-name">Espresso Shots</span>
+          <span class="cal-hint">(+5 cal per shot)</span>
+        </div>
+        <div class="counter">
+          <button class="icon-btn" onclick="updateShots(-1)">-</button>
+          <span class="count-val" id="shots-val">0</span>
+          <button class="icon-btn" onclick="updateShots(1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Syrups -->
+    <div class="md-card">
+      <h3>Syrups</h3>
+      <div id="syrups-container"></div>
+    </div>
+    
+    <!-- Sauces -->
+    <div class="md-card">
+      <h3>Sauces</h3>
+      <div id="sauces-container"></div>
+    </div>
+
+    <!-- Add-ons & Toppings -->
+    <div class="md-card">
+      <h3>Add-ons & Toppings</h3>
+      <div id="addons-container"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- DATABASE ---
+    
+
+const DB = {
+  milkTypes: {
+    '2': { name: '2% Milk', calPerOz: 130/14 },
+    'whole': { name: 'Whole Milk', calPerOz: 180/14 },
+    'nonfat': { name: 'Nonfat Milk', calPerOz: 80/14 },
+    'oat': { name: 'Oatmilk', calPerOz: 140/14 },
+    'almond': { name: 'Almondmilk', calPerOz: 60/14 },
+    'soy': { name: 'Soymilk', calPerOz: 130/14 },
+    'coconut': { name: 'Coconutmilk', calPerOz: 80/14 },
+    'sweet_cream': { name: 'Vanilla Sweet Cream', calPerOz: 300/14 },
+    'heavy_cream': { name: 'Heavy Cream', calPerOz: 1100/14 },
+    'breve': { name: 'Half & Half (Breve)', calPerOz: 560/14 },
+    'protein': { name: 'Protein-Boosted Milk', calPerOz: 110/14 },
+    'none': { name: 'No Milk', calPerOz: 0 }
+  },
+  milkVolumes: {
+    full: { Short: 6, Tall: 10, Grande: 14, Venti: 18, Trenta: 24 },
+    frapp: { Tall: 4, Grande: 6, Venti: 8 },
+    splash: { Short: 1, Tall: 2, Grande: 2.5, Venti: 3, Trenta: 4 },
+    half: { Short: 3, Tall: 5, Grande: 7, Venti: 9 }
+  },
+  syrups: {
+    'vanilla': { name: 'Vanilla Syrup', cal: 20 },
+    'sf_vanilla': { name: 'Sugar-Free Vanilla', cal: 0 },
+    'caramel': { name: 'Caramel Syrup', cal: 20 },
+    'sf_caramel': { name: 'Sugar-Free Caramel', cal: 0 },
+    'hazelnut': { name: 'Hazelnut Syrup', cal: 20 },
+    'classic': { name: 'Classic Syrup', cal: 20 },
+    'brown_sugar': { name: 'Brown Sugar Syrup', cal: 10 },
+    'liquid_cane': { name: 'Liquid Cane Sugar', cal: 10 },
+    'peppermint': { name: 'Peppermint Syrup', cal: 20 },
+    'cinnamon_dolce': { name: 'Cinnamon Dolce Syrup', cal: 20 },
+    'macadamia': { name: 'Macadamia Syrup', cal: 20 },
+    'raspberry': { name: 'Raspberry Syrup', cal: 20 },
+    'toasted_coconut': { name: 'Toasted Coconut Syrup', cal: 20 },
+    'mango_syrup': { name: 'Mango Syrup', cal: 20 },
+    'lavender': { name: 'Lavender Syrup', cal: 20 },
+    'horchata': { name: 'Horchata Syrup', cal: 20 },
+    'marshmallow': { name: 'Marshmallow Syrup', cal: 20 }
+  },
+  sauces: {
+    'mocha': { name: 'Mocha Sauce', cal: 35 },
+    'white_mocha': { name: 'White Mocha Sauce', cal: 60 },
+    'dark_caramel': { name: 'Dark Caramel Sauce', cal: 50 },
+    'pistachio': { name: 'Pistachio Sauce', cal: 50 },
+    'pumpkin': { name: 'Pumpkin Sauce', cal: 50 },
+    'caramel_brulee': { name: 'Caramel Brul\u00e9e Sauce', cal: 50 },
+    'strawberry_puree': { name: 'Strawberry Pur\u00e9e', cal: 20 },
+    'milk_chocolate': { name: 'Milk Chocolate Sauce', cal: 40 }
+  },
+  powders: {
+    'matcha': { name: 'Matcha Powder (scoops)', cal: 25 },
+    'chai': { name: 'Chai (pumps)', cal: 40 },
+    'vanilla_bean': { name: 'Vanilla Bean Powder', cal: 20 },
+    'java_chips': { name: 'Frappuccino Chips', cal: 20 }
+  },
+  addons: {
+    'whip': { name: 'Whipped Cream', cal: 110 },
+    'cold_foam': { name: 'Cold Foam', cal: 80 },
+    'vsccf': { name: 'Vanilla Sweet Cream Cold Foam', cal: 150 },
+    'choc_cream_cf': { name: 'Chocolate Cream Cold Foam', cal: 150 },
+    'matcha_cf': { name: 'Matcha Cream Cold Foam', cal: 150 },
+    'macadamia_cf': { name: 'Macadamia Cream Cold Foam', cal: 150 },
+    'salted_caramel_cf': { name: 'Salted Caramel Cold Foam', cal: 150 },
+    'spicy_cf': { name: 'Spicy Cream Cold Foam', cal: 150 },
+    'nondairy_cf': { name: 'Non-Dairy Cold Foam', cal: 50 },
+    'mango_cf': { name: 'Mango Cream Cold Foam', cal: 150 },
+    'raspberry_cf': { name: 'Raspberry Cream Cold Foam', cal: 150 },
+    'pistachio_cf': { name: 'Pistachio Cream Cold Foam', cal: 150 },
+    'marshmallow_cf': { name: 'Marshmallow Cold Foam', cal: 150 },
+    'lavender_cf': { name: 'Lavender Cream Cold Foam', cal: 150 },
+    'caramel_drizzle': { name: 'Caramel Drizzle', cal: 15 },
+    'mocha_drizzle': { name: 'Mocha Drizzle', cal: 15 },
+    'milk_choc_drizzle': { name: 'Milk Chocolate Drizzle', cal: 15 },
+    'spicy_chili': { name: 'Spicy Chili Powder', cal: 5 },
+    'cookie_crumble': { name: 'Cookie Crumble Topping', cal: 20 },
+    'graham_cracker': { name: 'Graham Cracker Crumble', cal: 20 },
+    'cinnamon_powder': { name: 'Cinnamon Powder', cal: 0 },
+    'nutmeg_powder': { name: 'Nutmeg Powder', cal: 0 },
+    'popping_pearls': { name: 'Mango-Pineapple Popping Pearls', cal: 30 },
+    'energy_boost': { name: 'Energy Boost (Caffeine/B-Vitamins)', cal: 5 },
+    'oleato': { name: 'Oleato (Olive Oil)', cal: 120 }
+  },
+  shots: {
+    'espresso': { name: 'Espresso Shot', cal: 5 }
+  }
+};
+
+    const drinks = [
+  {
+    "id": "caffe_latte",
+    "name": "Caffè Latte",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      }
+    }
+  },
+  {
+    "id": "cappuccino",
+    "name": "Cappuccino",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      }
+    }
+  },
+  {
+    "id": "americano",
+    "name": "Caffè Americano",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 4
+      }
+    }
+  },
+  {
+    "id": "caramel_macchiato",
+    "name": "Caramel Macchiato",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "syrups": {
+        "vanilla": {
+          "Short": 1,
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "caramel_drizzle"
+      ]
+    }
+  },
+  {
+    "id": "mocha",
+    "name": "Caffè Mocha",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "sauces": {
+        "mocha": {
+          "Short": 2,
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "whip"
+      ]
+    }
+  },
+  {
+    "id": "white_mocha",
+    "name": "White Chocolate Mocha",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "sauces": {
+        "white_mocha": {
+          "Short": 2,
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "whip"
+      ]
+    }
+  },
+  {
+    "id": "flat_white",
+    "name": "Flat White",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 2,
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 3
+      }
+    }
+  },
+  {
+    "id": "cortado",
+    "name": "Cortado",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 2
+      }
+    }
+  },
+  {
+    "id": "pistachio_latte",
+    "name": "Pistachio Latte",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "sauces": {
+        "pistachio": {
+          "Short": 1,
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "blonde_vanilla_latte",
+    "name": "Blonde Vanilla Latte",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "syrups": {
+        "vanilla": {
+          "Short": 2,
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "cinnamon_dolce_latte",
+    "name": "Cinnamon Dolce Latte",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "syrups": {
+        "cinnamon_dolce": {
+          "Short": 2,
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "whip",
+        "cinnamon_powder"
+      ]
+    }
+  },
+  {
+    "id": "espresso_macchiato",
+    "name": "Espresso Macchiato",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "shots": {
+        "Short": 2
+      }
+    }
+  },
+  {
+    "id": "caffe_misto",
+    "name": "Caffè Misto",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "half",
+    "defaults": {
+      "baseCal": {
+        "Short": 3,
+        "Tall": 5,
+        "Grande": 10,
+        "Venti": 15
+      }
+    }
+  },
+  {
+    "id": "brewed_pike",
+    "name": "Brewed Coffee (Pike Place)",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Short": 5,
+        "Tall": 5,
+        "Grande": 5,
+        "Venti": 5
+      }
+    }
+  },
+  {
+    "id": "honey_almond_fw",
+    "name": "Honey Almondmilk Flat White",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "almond",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 2,
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 3
+      }
+    }
+  },
+  {
+    "id": "london_fog",
+    "name": "London Fog Tea Latte",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "syrups": {
+        "vanilla": {
+          "Short": 1,
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "baseCal": {
+        "Short": 0,
+        "Tall": 0,
+        "Grande": 0,
+        "Venti": 0
+      }
+    }
+  },
+  {
+    "id": "caramel_protein_latte",
+    "name": "Caramel Protein Latte",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "protein",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "syrups": {
+        "caramel": {
+          "Short": 1,
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "vanilla_protein_latte",
+    "name": "Vanilla Protein Latte",
+    "category": "Hot Coffees",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "protein",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Short": 1,
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "syrups": {
+        "vanilla": {
+          "Short": 1,
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "iced_latte",
+    "name": "Iced Caffè Latte",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      }
+    }
+  },
+  {
+    "id": "iced_caramel_macchiato",
+    "name": "Iced Caramel Macchiato",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "syrups": {
+        "vanilla": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "caramel_drizzle"
+      ]
+    }
+  },
+  {
+    "id": "iced_mocha",
+    "name": "Iced Caffè Mocha",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "sauces": {
+        "mocha": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "whip"
+      ]
+    }
+  },
+  {
+    "id": "iced_white_mocha",
+    "name": "Iced White Chocolate Mocha",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Tall": 1,
+        "Grande": 2,
+        "Venti": 2
+      },
+      "sauces": {
+        "white_mocha": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "whip"
+      ]
+    }
+  },
+  {
+    "id": "iced_shaken_espresso",
+    "name": "Iced Shaken Espresso",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "shots": {
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 4
+      },
+      "syrups": {
+        "classic": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "iced_bs_oat_shaken",
+    "name": "Iced Brown Sugar Oatmilk Shaken Espresso",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "oat",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "shots": {
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 4
+      },
+      "syrups": {
+        "brown_sugar": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 6
+        }
+      },
+      "addons": [
+        "cinnamon_powder"
+      ]
+    }
+  },
+  {
+    "id": "iced_toasted_vanilla_shaken",
+    "name": "Iced Toasted Vanilla Oatmilk Shaken Espresso",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "oat",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "shots": {
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 4
+      },
+      "syrups": {
+        "vanilla": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 6
+        }
+      }
+    }
+  },
+  {
+    "id": "iced_horchata_shaken",
+    "name": "Iced Horchata Shaken Espresso",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "oat",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "shots": {
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 4
+      },
+      "syrups": {
+        "horchata": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 6
+        }
+      },
+      "addons": [
+        "cinnamon_powder"
+      ]
+    }
+  },
+  {
+    "id": "iced_flat_white",
+    "name": "Iced Flat White",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "shots": {
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 3
+      }
+    }
+  },
+  {
+    "id": "iced_americano",
+    "name": "Iced Caffè Americano",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "shots": {
+        "Tall": 2,
+        "Grande": 3,
+        "Venti": 4
+      }
+    }
+  },
+  {
+    "id": "iced_coffee",
+    "name": "Iced Coffee",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "classic": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5,
+          "Trenta": 7
+        }
+      },
+      "baseCal": {
+        "Tall": 60,
+        "Grande": 80,
+        "Venti": 110,
+        "Trenta": 140
+      }
+    }
+  },
+  {
+    "id": "cold_brew",
+    "name": "Cold Brew Coffee",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 5,
+        "Grande": 5,
+        "Venti": 5,
+        "Trenta": 5
+      }
+    }
+  },
+  {
+    "id": "vsccb",
+    "name": "Vanilla Sweet Cream Cold Brew",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "sweet_cream",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "vanilla": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3,
+          "Trenta": 4
+        }
+      },
+      "baseCal": {
+        "Tall": 5,
+        "Grande": 5,
+        "Venti": 5,
+        "Trenta": 5
+      }
+    }
+  },
+  {
+    "id": "salted_caramel_cb",
+    "name": "Salted Caramel Cream Cold Brew",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "vanilla": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3,
+          "Trenta": 4
+        }
+      },
+      "addons": [
+        "salted_caramel_cf"
+      ],
+      "baseCal": {
+        "Tall": 5,
+        "Grande": 5,
+        "Venti": 5,
+        "Trenta": 5
+      }
+    }
+  },
+  {
+    "id": "chocolate_cream_cb",
+    "name": "Chocolate Cream Cold Brew",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "vanilla": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3,
+          "Trenta": 4
+        }
+      },
+      "addons": [
+        "choc_cream_cf"
+      ],
+      "baseCal": {
+        "Tall": 5,
+        "Grande": 5,
+        "Venti": 5,
+        "Trenta": 5
+      }
+    }
+  },
+  {
+    "id": "smores_cb",
+    "name": "S’mores Cold Brew",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "marshmallow": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3,
+          "Trenta": 4
+        }
+      },
+      "addons": [
+        "marshmallow_cf",
+        "milk_choc_drizzle",
+        "graham_cracker"
+      ],
+      "baseCal": {
+        "Tall": 5,
+        "Grande": 5,
+        "Venti": 5,
+        "Trenta": 5
+      }
+    }
+  },
+  {
+    "id": "nitro_cb",
+    "name": "Nitro Cold Brew",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 5,
+        "Grande": 5
+      }
+    }
+  },
+  {
+    "id": "caramel_protein_matcha",
+    "name": "Iced Caramel Protein Matcha",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "protein",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "matcha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "syrups": {
+        "caramel": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "sf_vanilla_protein_matcha",
+    "name": "Iced SF Vanilla Protein Matcha",
+    "category": "Cold Coffees",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "protein",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "matcha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "syrups": {
+        "sf_vanilla": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "caramel_frapp",
+    "name": "Caramel Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "syrups": {
+        "caramel": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip",
+        "caramel_drizzle"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "mocha_frapp",
+    "name": "Mocha Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "sauces": {
+        "mocha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "java_chip_frapp",
+    "name": "Java Chip Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "sauces": {
+        "mocha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "powders": {
+        "java_chips": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip",
+        "mocha_drizzle"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "crc_frapp",
+    "name": "Caramel Ribbon Crunch Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "sauces": {
+        "dark_caramel": {
+          "Tall": 4,
+          "Grande": 5,
+          "Venti": 6
+        }
+      },
+      "addons": [
+        "whip",
+        "caramel_drizzle",
+        "cookie_crumble"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "coffee_frapp",
+    "name": "Coffee Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "mocha_cookie_frapp",
+    "name": "Mocha Cookie Crumble Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "sauces": {
+        "mocha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "powders": {
+        "java_chips": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip",
+        "mocha_drizzle",
+        "cookie_crumble"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "vanilla_bean_frapp",
+    "name": "Vanilla Bean Crème Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "powders": {
+        "vanilla_bean": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip"
+      ],
+      "baseCal": {
+        "Tall": 80,
+        "Grande": 120,
+        "Venti": 160
+      }
+    }
+  },
+  {
+    "id": "strawberry_frapp",
+    "name": "Strawberry Crème Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "sauces": {
+        "strawberry_puree": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip"
+      ],
+      "baseCal": {
+        "Tall": 80,
+        "Grande": 120,
+        "Venti": 160
+      }
+    }
+  },
+  {
+    "id": "matcha_frapp",
+    "name": "Matcha Crème Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "powders": {
+        "matcha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip"
+      ],
+      "baseCal": {
+        "Tall": 80,
+        "Grande": 120,
+        "Venti": 160
+      }
+    }
+  },
+  {
+    "id": "pistachio_frapp",
+    "name": "Pistachio Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "sauces": {
+        "pistachio": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "smores_frapp",
+    "name": "S’mores Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "syrups": {
+        "vanilla": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3
+        },
+        "marshmallow": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3
+        }
+      },
+      "sauces": {
+        "milk_chocolate": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3
+        }
+      },
+      "addons": [
+        "whip",
+        "graham_cracker"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "horchata_frapp",
+    "name": "Horchata Frappuccino",
+    "category": "Frappuccino",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "whole",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "syrups": {
+        "horchata": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "addons": [
+        "whip",
+        "cinnamon_powder"
+      ],
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 150,
+        "Venti": 200
+      }
+    }
+  },
+  {
+    "id": "strawberry_acai",
+    "name": "Strawberry Açaí Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 70,
+        "Grande": 90,
+        "Venti": 130,
+        "Trenta": 170
+      }
+    }
+  },
+  {
+    "id": "strawberry_acai_lemonade",
+    "name": "Strawberry Açaí Lemonade Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 130,
+        "Venti": 180,
+        "Trenta": 230
+      }
+    }
+  },
+  {
+    "id": "strawberry_acai_energy",
+    "name": "Strawberry Açaí Energy Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "addons": [
+        "energy_boost"
+      ],
+      "baseCal": {
+        "Tall": 75,
+        "Grande": 95,
+        "Venti": 135,
+        "Trenta": 175
+      }
+    }
+  },
+  {
+    "id": "mango_dragonfruit",
+    "name": "Mango Dragonfruit Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 60,
+        "Grande": 80,
+        "Venti": 120,
+        "Trenta": 150
+      }
+    }
+  },
+  {
+    "id": "mango_dragonfruit_lemonade",
+    "name": "Mango Dragonfruit Lemonade Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 130,
+        "Venti": 180,
+        "Trenta": 230
+      }
+    }
+  },
+  {
+    "id": "mango_strawberry",
+    "name": "Mango Strawberry Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 130,
+        "Venti": 180,
+        "Trenta": 230
+      }
+    }
+  },
+  {
+    "id": "mango_strawberry_lemonade",
+    "name": "Mango Strawberry Lemonade Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 130,
+        "Grande": 170,
+        "Venti": 240,
+        "Trenta": 300
+      }
+    }
+  },
+  {
+    "id": "pineapple_passionfruit",
+    "name": "Pineapple Passionfruit Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 60,
+        "Grande": 80,
+        "Venti": 120,
+        "Trenta": 150
+      }
+    }
+  },
+  {
+    "id": "pink_drink",
+    "name": "Pink Drink",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "coconut",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "baseCal": {
+        "Tall": 110,
+        "Grande": 140,
+        "Venti": 200,
+        "Trenta": 270
+      }
+    }
+  },
+  {
+    "id": "dragon_drink",
+    "name": "Dragon Drink",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "coconut",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 130,
+        "Venti": 190,
+        "Trenta": 250
+      }
+    }
+  },
+  {
+    "id": "paradise_drink",
+    "name": "Paradise Drink",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "coconut",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 130,
+        "Venti": 190,
+        "Trenta": 250
+      }
+    }
+  },
+  {
+    "id": "butterfly_drink",
+    "name": "Butterfly Drink",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "coconut",
+    "defaultMilkVolume": "frapp",
+    "defaults": {
+      "addons": [
+        "popping_pearls"
+      ],
+      "baseCal": {
+        "Tall": 90,
+        "Grande": 120,
+        "Venti": 160,
+        "Trenta": 210
+      }
+    }
+  },
+  {
+    "id": "tropical_butterfly",
+    "name": "Tropical Butterfly Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "addons": [
+        "popping_pearls"
+      ],
+      "baseCal": {
+        "Tall": 60,
+        "Grande": 80,
+        "Venti": 120,
+        "Trenta": 150
+      }
+    }
+  },
+  {
+    "id": "blue_coconut",
+    "name": "Blue Coconut Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 60,
+        "Grande": 80,
+        "Venti": 120,
+        "Trenta": 150
+      }
+    }
+  },
+  {
+    "id": "blue_coconut_lemonade",
+    "name": "Blue Coconut Lemonade Refresher",
+    "category": "Refreshers",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Tall": 100,
+        "Grande": 130,
+        "Venti": 180,
+        "Trenta": 230
+      }
+    }
+  },
+  {
+    "id": "chai_latte",
+    "name": "Chai Tea Latte",
+    "category": "Teas",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "chai": {
+          "Short": 2,
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "iced_chai_latte",
+    "name": "Iced Chai Tea Latte",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "chai": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      }
+    }
+  },
+  {
+    "id": "matcha_latte",
+    "name": "Matcha Tea Latte",
+    "category": "Teas",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "matcha": {
+          "Short": 1,
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "iced_matcha_latte",
+    "name": "Iced Matcha Tea Latte",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "matcha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "double_berry_matcha",
+    "name": "Iced Double Berry Matcha",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "matcha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "sauces": {
+        "strawberry_puree": {
+          "Tall": 1,
+          "Grande": 2,
+          "Venti": 3
+        }
+      },
+      "addons": [
+        "raspberry_cf"
+      ],
+      "baseCal": {
+        "Tall": 190,
+        "Grande": 260,
+        "Venti": 340
+      }
+    }
+  },
+  {
+    "id": "london_fog_latte",
+    "name": "London Fog Tea Latte",
+    "category": "Teas",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "syrups": {
+        "vanilla": {
+          "Short": 1,
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "baseCal": {
+        "Short": 0,
+        "Tall": 0,
+        "Grande": 0,
+        "Venti": 0
+      }
+    }
+  },
+  {
+    "id": "honey_citrus_mint",
+    "name": "Honey Citrus Mint Tea",
+    "category": "Teas",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "baseCal": {
+        "Short": 60,
+        "Tall": 80,
+        "Grande": 100,
+        "Venti": 130
+      }
+    }
+  },
+  {
+    "id": "iced_black_tea",
+    "name": "Iced Black Tea",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "liquid_cane": {
+          "Tall": 0,
+          "Grande": 0,
+          "Venti": 0,
+          "Trenta": 0
+        }
+      },
+      "baseCal": {
+        "Tall": 0,
+        "Grande": 0,
+        "Venti": 0,
+        "Trenta": 0
+      }
+    }
+  },
+  {
+    "id": "iced_green_tea",
+    "name": "Iced Green Tea",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "liquid_cane": {
+          "Tall": 0,
+          "Grande": 0,
+          "Venti": 0,
+          "Trenta": 0
+        }
+      },
+      "baseCal": {
+        "Tall": 0,
+        "Grande": 0,
+        "Venti": 0,
+        "Trenta": 0
+      }
+    }
+  },
+  {
+    "id": "iced_passion_tango",
+    "name": "Iced Passion Tango Tea",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "liquid_cane": {
+          "Tall": 0,
+          "Grande": 0,
+          "Venti": 0,
+          "Trenta": 0
+        }
+      },
+      "baseCal": {
+        "Tall": 0,
+        "Grande": 0,
+        "Venti": 0,
+        "Trenta": 0
+      }
+    }
+  },
+  {
+    "id": "iced_black_tea_lemonade",
+    "name": "Iced Black Tea Lemonade",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "liquid_cane": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4,
+          "Trenta": 5
+        }
+      },
+      "baseCal": {
+        "Tall": 50,
+        "Grande": 70,
+        "Venti": 100,
+        "Trenta": 130
+      }
+    }
+  },
+  {
+    "id": "iced_green_tea_lemonade",
+    "name": "Iced Green Tea Lemonade",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "liquid_cane": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4,
+          "Trenta": 5
+        }
+      },
+      "baseCal": {
+        "Tall": 50,
+        "Grande": 70,
+        "Venti": 100,
+        "Trenta": 130
+      }
+    }
+  },
+  {
+    "id": "iced_passion_tango_lemonade",
+    "name": "Iced Passion Tango Tea Lemonade",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti",
+      "Trenta"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "syrups": {
+        "liquid_cane": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4,
+          "Trenta": 5
+        }
+      },
+      "baseCal": {
+        "Tall": 50,
+        "Grande": 70,
+        "Venti": 100,
+        "Trenta": 130
+      }
+    }
+  },
+  {
+    "id": "iced_blue_coconut_matcha",
+    "name": "Iced Blue Coconut Matcha",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "matcha": {
+          "Tall": 2,
+          "Grande": 3,
+          "Venti": 4
+        }
+      },
+      "baseCal": {
+        "Tall": 20,
+        "Grande": 30,
+        "Venti": 40
+      }
+    }
+  },
+  {
+    "id": "iced_smores_chai",
+    "name": "Iced S’mores Chai",
+    "category": "Teas",
+    "sizes": [
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "powders": {
+        "chai": {
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "marshmallow_cf",
+        "milk_choc_drizzle",
+        "graham_cracker"
+      ]
+    }
+  },
+  {
+    "id": "hot_chocolate",
+    "name": "Hot Chocolate",
+    "category": "Hot Chocolate",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "sauces": {
+        "mocha": {
+          "Short": 2,
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "whip",
+        "mocha_drizzle"
+      ],
+      "baseCal": {
+        "Short": 0,
+        "Tall": 0,
+        "Grande": 0,
+        "Venti": 0
+      }
+    }
+  },
+  {
+    "id": "white_hot_chocolate",
+    "name": "White Hot Chocolate",
+    "category": "Hot Chocolate",
+    "sizes": [
+      "Short",
+      "Tall",
+      "Grande",
+      "Venti"
+    ],
+    "defaultMilk": "2",
+    "defaultMilkVolume": "full",
+    "defaults": {
+      "sauces": {
+        "white_mocha": {
+          "Short": 2,
+          "Tall": 3,
+          "Grande": 4,
+          "Venti": 5
+        }
+      },
+      "addons": [
+        "whip"
+      ],
+      "baseCal": {
+        "Short": 0,
+        "Tall": 0,
+        "Grande": 0,
+        "Venti": 0
+      }
+    }
+  },
+  {
+    "id": "melon_burst_energy",
+    "name": "Melon Burst Iced Energy",
+    "category": "Energy Drinks",
+    "sizes": [
+      "Venti"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "addons": [
+        "energy_boost"
+      ],
+      "baseCal": {
+        "Venti": 10
+      }
+    }
+  },
+  {
+    "id": "tropical_citrus_energy",
+    "name": "Tropical Citrus Iced Energy",
+    "category": "Energy Drinks",
+    "sizes": [
+      "Venti"
+    ],
+    "defaultMilk": "none",
+    "defaultMilkVolume": "splash",
+    "defaults": {
+      "addons": [
+        "energy_boost"
+      ],
+      "baseCal": {
+        "Venti": 5
+      }
+    }
+  }
+];
+
+        let appState = {
+      drinkId: 'caramel_macchiato',
+      size: 'Grande',
+      mods: {}
+    };
+
+    // --- INIT ---
+    function init() {
+      renderDrinkSelect();
+      
+      document.getElementById('drink-select').addEventListener('change', (e) => {
+        selectDrink(e.target.value);
+      });
+      document.getElementById('milk-select').addEventListener('change', (e) => {
+        appState.mods.milk = e.target.value;
+        updateBreakdown();
+      });
+
+      selectDrink('caramel_macchiato');
+    }
+
+    // --- CORE LOGIC ---
+    function getModsForSize(drink, size) {
+      const mods = {
+        milk: drink.defaultMilk || 'none',
+        milkVol: drink.defaultMilkVolume || 'splash',
+        shots: 0,
+        syrups: {},
+        sauces: {},
+        powders: {},
+        addons: {}
+      };
+
+      const defaults = drink.defaults || {};
+
+      // Shots
+      if (defaults.shots && defaults.shots[size] !== undefined) {
+        mods.shots = defaults.shots[size];
+      }
+
+      // Syrups
+      if (defaults.syrups) {
+        for (let [id, valObj] of Object.entries(defaults.syrups)) {
+          if (valObj && valObj[size] !== undefined) {
+            mods.syrups[id] = valObj[size];
+          }
+        }
+      }
+
+      // Sauces
+      if (defaults.sauces) {
+        for (let [id, valObj] of Object.entries(defaults.sauces)) {
+          if (valObj && valObj[size] !== undefined) {
+            mods.sauces[id] = valObj[size];
+          }
+        }
+      }
+
+      // Powders
+      if (defaults.powders) {
+        for (let [id, valObj] of Object.entries(defaults.powders)) {
+          if (valObj && valObj[size] !== undefined) {
+            mods.powders[id] = valObj[size];
+          }
+        }
+      }
+
+      // Addons
+      if (defaults.addons) {
+        defaults.addons.forEach(addonId => {
+          mods.addons[addonId] = 1;
+        });
+      }
+
+      return mods;
+    }
+
+    function selectDrink(id) {
+      appState.drinkId = id;
+      const drink = drinks.find(d => d.id === id);
+      appState.size = drink.sizes.includes('Grande') ? 'Grande' : drink.sizes[0];
+      appState.mods = getModsForSize(drink, appState.size);
+      
+      document.getElementById('drink-select').value = id;
+      
+      renderSizes();
+      renderCustomizations();
+      updateBreakdown();
+    }
+
+    function changeSize(size) {
+      appState.size = size;
+      const drink = drinks.find(d => d.id === appState.drinkId);
+      appState.mods = getModsForSize(drink, size);
+      
+      renderSizes();
+      renderCustomizations(); // to reset inputs
+      updateBreakdown();
+    }
+
+    function updateShots(change) {
+      let current = appState.mods.shots || 0;
+      let next = current + change;
+      if (next >= 0 && next <= 12) {
+        appState.mods.shots = next;
+        document.getElementById('shots-val').textContent = next;
+        updateBreakdown();
+      }
+    }
+
+    function updateQuantifiable(type, key, change) {
+      if (!appState.mods[type]) appState.mods[type] = {};
+      let current = appState.mods[type][key] || 0;
+      let next = current + change;
+      if (next >= 0 && next <= 15) {
+        appState.mods[type][key] = next;
+        document.getElementById(`qty-${type}-${key}`).textContent = next;
+        updateBreakdown();
+      }
+    }
+
+    // Custom toggle logic that updates addons state
+    function toggleAddon(key) {
+      if (!appState.mods.addons) appState.mods.addons = {};
+      let current = appState.mods.addons[key] || 0;
+      appState.mods.addons[key] = current ? 0 : 1;
+      updateBreakdown();
+    }
+
+    // --- RENDERING ---
+    function filterDrinks() {
+      const q = document.getElementById('drink-search').value.toLowerCase();
+      const select = document.getElementById('drink-select');
+      select.innerHTML = '';
+      
+      const categories = {};
+      drinks.forEach(d => {
+        if (d.name.toLowerCase().includes(q)) {
+            if (!categories[d.category]) categories[d.category] = [];
+            categories[d.category].push(d);
+        }
+      });
+      
+      for (let [cat, list] of Object.entries(categories)) {
+        const group = document.createElement('optgroup');
+        group.label = cat;
+        list.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.name;
+          group.appendChild(opt);
+        });
+        select.appendChild(group);
+      }
+    }
+
+    function renderDrinkSelect() {
+      const select = document.getElementById('drink-select');
+      select.innerHTML = '';
+      const categories = {};
+      drinks.forEach(d => {
+        if (!categories[d.category]) categories[d.category] = [];
+        categories[d.category].push(d);
+      });
+      
+      for (let [cat, list] of Object.entries(categories)) {
+        const group = document.createElement('optgroup');
+        group.label = cat;
+        list.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.name;
+          group.appendChild(opt);
+        });
+        select.appendChild(group);
+      }
+    }
+
+    function renderSizes() {
+      const drink = drinks.find(d => d.id === appState.drinkId);
+      const container = document.getElementById('size-chips');
+      container.innerHTML = '';
+      drink.sizes.forEach(size => {
+        const chip = document.createElement('div');
+        chip.className = 'md-chip' + (appState.size === size ? ' active' : '');
+        chip.textContent = size;
+        chip.onclick = () => changeSize(size);
+        container.appendChild(chip);
+      });
+    }
+
+    function renderCustomizations() {
+      const drink = drinks.find(d => d.id === appState.drinkId);
+      
+      // Milk
+      const milkSelect = document.getElementById('milk-select');
+      milkSelect.innerHTML = '';
+      for (let [id, m] of Object.entries(DB.milkTypes)) {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = m.name;
+        if (appState.mods.milk === id) opt.selected = true;
+        milkSelect.appendChild(opt);
+      }
+
+      // Shots
+      document.getElementById('shots-val').textContent = appState.mods.shots || 0;
+      
+      // Syrups & Sauces generators
+      const buildCounters = (db, type, containerId) => {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        for (let [id, item] of Object.entries(db)) {
+          let val = appState.mods[type]?.[id] || 0;
+          container.innerHTML += `
+            <div class="counter-row">
+              <div>
+                <span class="item-name">${item.name}</span>
+                <span class="cal-hint">(+${item.cal} cal per unit)</span>
+              </div>
+              <div class="counter">
+                <button class="icon-btn" onclick="updateQuantifiable('${type}', '${id}', -1)">-</button>
+                <span class="count-val" id="qty-${type}-${id}">${val}</span>
+                <button class="icon-btn" onclick="updateQuantifiable('${type}', '${id}', 1)">+</button>
+              </div>
+            </div>
+          `;
+        }
+      };
+
+      buildCounters(DB.syrups, 'syrups', 'syrups-container');
+      
+      const saucesContainer = document.getElementById('sauces-container');
+      saucesContainer.innerHTML = '';
+      for (let [id, item] of Object.entries(DB.sauces)) {
+        let val = appState.mods.sauces?.[id] || 0;
+        saucesContainer.innerHTML += buildCounterHTML('sauces', id, item, val);
+      }
+      for (let [id, item] of Object.entries(DB.powders)) {
+        let val = appState.mods.powders?.[id] || 0;
+        saucesContainer.innerHTML += buildCounterHTML('powders', id, item, val);
+      }
+
+      // Add-ons
+      const addonsContainer = document.getElementById('addons-container');
+      addonsContainer.innerHTML = '';
+      for (let [id, item] of Object.entries(DB.addons)) {
+        let checked = appState.mods.addons?.[id] ? 'checked' : '';
+        addonsContainer.innerHTML += `
+          <label class="toggle-row">
+            <div>
+              <span class="item-name">${item.name}</span>
+              <span class="cal-hint">(+${item.cal} cal)</span>
+            </div>
+            <input type="checkbox" ${checked} onchange="toggleAddon('${id}')">
+            <span class="custom-toggle"></span>
+          </label>
+        `;
+      }
+    }
+
+    function buildCounterHTML(type, id, item, val) {
+      return `
+        <div class="counter-row">
+          <div>
+            <span class="item-name">${item.name}</span>
+            <span class="cal-hint">(+${item.cal} cal)</span>
+          </div>
+          <div class="counter">
+            <button class="icon-btn" onclick="updateQuantifiable('${type}', '${id}', -1)">-</button>
+            <span class="count-val" id="qty-${type}-${id}">${val}</span>
+            <button class="icon-btn" onclick="updateQuantifiable('${type}', '${id}', 1)">+</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- CALCULATION ---
+    function calculateBaseCalories(drink, size) {
+      let base = 0;
+      if (drink.defaults && drink.defaults.baseCal) {
+        base = drink.defaults.baseCal[size] || 0;
+      }
+      
+      const defMods = getModsForSize(drink, size);
+      let cal = base;
+      
+      if (defMods.milk && defMods.milk !== 'none') {
+        const vol = DB.milkVolumes[defMods.milkVol][size] || 0;
+        cal += DB.milkTypes[defMods.milk].calPerOz * vol;
+      }
+      if (defMods.shots) cal += defMods.shots * DB.shots.espresso.cal;
+      
+      const qs = [ {k: 'syrups', db: DB.syrups}, {k: 'sauces', db: DB.sauces}, {k: 'powders', db: DB.powders} ];
+      qs.forEach(q => {
+        if (defMods[q.k]) {
+          for (let [id, qty] of Object.entries(defMods[q.k])) {
+            cal += qty * q.db[id].cal;
+          }
+        }
+      });
+      
+      if (defMods.addons) {
+        for (let [id, qty] of Object.entries(defMods.addons)) {
+          if (qty) cal += DB.addons[id].cal;
+        }
+      }
+      return Math.round(cal);
+    }
+
+    function updateBreakdown() {
+      const drink = drinks.find(d => d.id === appState.drinkId);
+      const defMods = getModsForSize(drink, appState.size);
+      const curMods = appState.mods;
+      
+      let baseCal = calculateBaseCalories(drink, appState.size);
+      let totalCal = baseCal;
+      
+      let html = `
+        <div class="breakdown-row" style="font-weight: 600; color: white;">
+          <span>${appState.size} ${drink.name} (Base)</span>
+          <span>${baseCal} cal</span>
+        </div>
+      `;
+      
+      // Milk Diff
+      if (curMods.milk !== defMods.milk) {
+        let defVol = defMods.milkVol ? DB.milkVolumes[defMods.milkVol][appState.size] : 0;
+        if (!defVol && curMods.milk !== 'none') defVol = DB.milkVolumes.splash[appState.size];
+        
+        let defCal = (defMods.milk && defMods.milk !== 'none') ? DB.milkTypes[defMods.milk].calPerOz * defVol : 0;
+        let curCal = (curMods.milk && curMods.milk !== 'none') ? DB.milkTypes[curMods.milk].calPerOz * defVol : 0;
+        
+        let delta = Math.round(curCal - defCal);
+        totalCal += delta;
+        
+        let name = DB.milkTypes[curMods.milk].name;
+        let desc = curMods.milk === 'none' ? `− No Milk` : 
+                   (defMods.milk === 'none' ? `+ ${name}` : `${name} instead of ${DB.milkTypes[defMods.milk].name}`);
+        html += renderRow(desc, delta);
+      }
+      
+      // Shots Diff
+      let defShots = defMods.shots || 0;
+      let curShots = curMods.shots || 0;
+      if (defShots !== curShots) {
+        let delta = (curShots - defShots) * DB.shots.espresso.cal;
+        totalCal += delta;
+        let desc = curShots > defShots ? `+ Espresso Shot (${curShots - defShots})` : `− Espresso Shot (${defShots - curShots} removed)`;
+        html += renderRow(desc, delta);
+      }
+      
+      // Syrups/Sauces/Powders Diff
+      const qs = [ {k: 'syrups', db: DB.syrups}, {k: 'sauces', db: DB.sauces}, {k: 'powders', db: DB.powders} ];
+      qs.forEach(q => {
+        let keys = new Set([...Object.keys(defMods[q.k] || {}), ...Object.keys(curMods[q.k] || {})]);
+        keys.forEach(id => {
+          let dVal = defMods[q.k]?.[id] || 0;
+          let cVal = curMods[q.k]?.[id] || 0;
+          if (dVal !== cVal) {
+            let delta = (cVal - dVal) * q.db[id].cal;
+            totalCal += delta;
+            let desc = '';
+            if (cVal === 0) desc = `− ${q.db[id].name} (removed)`;
+            else if (dVal === 0) desc = `+ ${q.db[id].name} (${cVal})`;
+            else desc = `${cVal > dVal ? '+' : '−'} ${q.db[id].name} (${cVal} instead of ${dVal})`;
+            html += renderRow(desc, delta);
+          }
+        });
+      });
+      
+      // Addons Diff
+      let addonKeys = new Set([...Object.keys(defMods.addons || {}), ...Object.keys(curMods.addons || {})]);
+      addonKeys.forEach(id => {
+        let dVal = defMods.addons?.[id] || 0;
+        let cVal = curMods.addons?.[id] || 0;
+        if (dVal !== cVal) {
+          let delta = (cVal - dVal) * DB.addons[id].cal;
+          totalCal += delta;
+          let desc = cVal === 0 ? `− ${DB.addons[id].name} (removed)` : `+ ${DB.addons[id].name}`;
+          html += renderRow(desc, delta);
+        }
+      });
+      
+      document.getElementById('breakdown-list').innerHTML = html;
+      
+      // Update Total
+      const totalEl = document.getElementById('total-calories');
+      totalEl.textContent = Math.max(0, totalCal);
+      
+      // Trigger bump animation
+      totalEl.classList.remove('bump');
+      void totalEl.offsetWidth; // trigger reflow
+      totalEl.classList.add('bump');
+    }
+
+    function renderRow(desc, delta) {
+      let color = 'rgba(255,255,255,0.85)';
+      if (delta > 0) color = '#ffcc80'; // material orange for add
+      if (delta < 0) color = '#a5d6a7'; // material green for remove
+      let sign = delta > 0 ? '+' : '';
+      return `
+        <div class="breakdown-row" style="color: ${color};">
+          <span style="padding-right: 16px;">${desc}</span>
+          <span style="white-space: nowrap;">${sign}${delta} cal</span>
+        </div>
+      `;
+    }
+
+    // --- MATERIAL RIPPLE EFFECT ---
+    document.addEventListener('click', function(e) {
+      const target = e.target.closest('.icon-btn, .md-chip');
+      if (target) {
+        const circle = document.createElement("span");
+        const diameter = Math.max(target.clientWidth, target.clientHeight);
+        const radius = diameter / 2;
+        const rect = target.getBoundingClientRect();
+        
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${e.clientX - rect.left - radius}px`;
+        circle.style.top = `${e.clientY - rect.top - radius}px`;
+        circle.classList.add("ripple");
+        
+        const existing = target.querySelector(".ripple");
+        if (existing) existing.remove();
+        target.appendChild(circle);
+        
+        setTimeout(() => circle.remove(), 500);
+      }
+    });
+
+    // Start App
+    init();
+  </script>
+</body>
+</html>
